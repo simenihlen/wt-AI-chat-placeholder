@@ -1,0 +1,23 @@
+﻿@startuml
+start
+
+:User sends message (prompt);
+:Get embedding for prompt;
+:Get past session summaries;
+:Summarize relevant stories;
+:Prepare chat messages (history + summaries);
+:Send request to OpenAI;
+:Receive AI response;
+
+:Save user and AI messages;
+if (Is it the first message?) then (yes)
+    :Generate session title;
+endif
+
+if (Is session too long?) then (yes)
+    :Generate session summary;
+endif
+
+:Return AI response to user;
+stop
+@enduml

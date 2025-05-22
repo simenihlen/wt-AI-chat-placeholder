@@ -1,0 +1,46 @@
+<div class="chat-container">
+  <!-- Sidebar: Conversation List -->
+  <div class="chat-sidebar">
+    <h2 class="wt-header-2">
+      Conversations
+      <button class="add-session-btn" (click)="startNewChat()">+</button>
+    </h2>
+
+    <div class="conversation-list">
+      <div *ngFor="let convo of conversations"
+           (click)="selectConversation(convo)"
+           [class.selected]="selectedConversation?.id === convo.id"
+           class="conversation-item">
+        <div class="conversation-title">"New Session" <!-- Default title -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chat Window -->
+  <div class="chat-main" *ngIf="selectedConversation">
+    <div class="chat-header">
+      <h2 class="wt-header-2">New Session</h2> <!-- ✅ Always static title -->
+    </div>
+
+    <div class="chat-messages">
+      <div *ngFor="let msg of selectedConversation.messages" class="message">
+        <div class="message-sender">{{ msg.sender }}</div>
+        <div class="message-content">{{ msg.content }}</div>
+        <div class="message-timestamp">{{ msg.timestamp | date:'shortTime' }}</div>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <input [(ngModel)]="newMessage"
+             placeholder="Type a message..."
+             class="wt-input"
+             (keyup.enter)="sendMessage()">
+      <button class="wt-button" (click)="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <div class="no-conversation-selected" *ngIf="!selectedConversation">
+    <p>Please select or start a conversation</p>
+  </div>
+</div>

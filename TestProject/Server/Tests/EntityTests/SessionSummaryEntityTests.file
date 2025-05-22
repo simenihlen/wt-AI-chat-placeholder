@@ -1,0 +1,99 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TestProject.Server.Baseclasses;
+using TestProject.Server.Injection;
+using Testrepository.Server.Models.Entities;
+using Testrepository.Server.Persistence.Internal.GeneratedArtifacts;
+using Xunit.Abstractions;
+using Xunit.Sdk;
+
+namespace TestProject.Server.Tests.EntityTests
+{
+    public class SessionSummaryEntityTests : TestBase, IClassFixture<CustomWebApplicationFactory<Program>>
+    {
+        private UserEntity user;
+        private DatabaseContext _context;
+        public SessionSummaryEntityTests(CustomWebApplicationFactory<Program> factory, ITestOutputHelper logger) : base(factory, logger)
+        {
+            _context = GetService<DatabaseContext>();
+            user = UserEntityTests.CreateUser(_context, "user");
+        }
+        
+        [Fact]
+        public void CanCreate()
+        {
+            var timestamp = DateTime.UtcNow;
+            var getEntity = () => _context.Sessions.FirstOrDefault(e => e.created_at == timestamp);
+            Assert.Null(getEntity());
+            CreateSession(_context, timestamp, user);
+            Assert.NotNull(getEntity());
+        }
+        
+        public static SessionEntity CreateSession(DatabaseContext _context, DateTime timestamp, UserEntity user)
+        {
+            var session = new SessionEntity
+            {
+                id = 1,
+                created_at = timestamp,
+                user_id = user.sub,
+                Messages = new List<ChatMessageEntity>(),
+                UserEntity = user
+            };
+            _context.Sessions.Add(session);
+            _context.SaveChanges();
+            return session;
+        }
+        
+        [Fact]
+        public void CanRead()
+        {
+            var timestamp = DateTime.UtcNow;
+            CreateSession(_context, timestamp, user);
+            var retrieved = _context.Sessions.FirstOrDefault(e => e.created_at == timestamp);
+            Assert.NotNull(retrieved);
+        }
+        
+        [Fact]
+        public void CanUpdate()
+        {
+            var timestamp = DateTime.UtcNow;
+            CreateSession(_context, timestamp, user);
+            var newtime = DateTime.UtcNow;
+            Update(timestamp, newtime);
+            var retrieved = _context.Sessions.FirstOrDefault(e => e.created_at == newtime);
+            Assert.NotNull(retrieved);
+        }
+        
+        private void Update(DateTime oldtime, DateTime newtime)
+        {
+            var entity = _context.Sessions.FirstOrDefault(e => e.created_at == oldtime);
+            Assert.NotNull(entity);
+            entity.created_at = newtime;
+            _context.SaveChanges();
+        }
+        
+        [Fact]
+        public void CanDelete()
+        {
+            var timestamp = DateTime.UtcNow;
+            CreateSession(_context, timestamp, user);
+            Delete(timestamp);
+            var retrieved = _context.Sessions.FirstOrDefault(e => e.created_at == timestamp);
+            Assert.Null(retrieved);
+        }
+        
+        private void Delete(DateTime sessiontime)
+        {
+            var entity = _context.Sessions.FirstOrDefault(e => e.created_at == sessiontime);
+            Assert.NotNull(entity);
+            _context.Sessions.Remove(entity);
+            _context.SaveChanges();
+        }
+
+    }
+}

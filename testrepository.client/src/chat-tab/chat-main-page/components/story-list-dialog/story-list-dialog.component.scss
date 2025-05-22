@@ -1,0 +1,39 @@
+/* filepath: c:\Users\simen\source\repos\wolftech-news-frontend\src\app\main-components\chat-tab\story-list-dialog\story-list-dialog.component.scss */
+.dialog-container {
+    padding: 1rem;
+    min-width: 400px;
+    max-width: 600px;
+  }
+
+  #title {
+    margin-bottom: 1rem;
+  }
+  
+  .story-list {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .story-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--wt-bg-highlight-prim);
+    }
+  }
+  
+  .story-title {
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  
+  .story-info {
+    font-size: 12px;
+    color: #666;
+  }

@@ -1,0 +1,120 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Testrepository.Server.Models.Entities;
+using Testrepository.Server.Persistence.Internal.GeneratedArtifacts;
+using Microsoft.EntityFrameworkCore;
+using TestProject.Server.Injection;
+
+using System.Reflection;
+using TestProject.Server.Baseclasses;
+using TestProject.Server.Tests.EntityTests;
+using System.Net.Http;
+using System.Text.Json;
+using Testrepository.Server.Models.DTO;
+using Testrepository.Server.Services.SessionService.Implementations;
+using Testrepository.Server.Services.UserService.Implementations;
+using Xunit.Abstractions;
+
+namespace TestProject.Server.Tests.ServiceTests
+{
+    public class SessionServiceTests : TestBase, IClassFixture<CustomWebApplicationFactory<Program>>
+    {
+        private readonly SessionServiceImpl sessionService;
+        private UserEntity User;
+
+        public SessionServiceTests(CustomWebApplicationFactory<Program> factory, ITestOutputHelper logger) : base(factory, logger)
+        {
+            sessionService = GetService<SessionServiceImpl>();
+            User = UserServiceTests.InstantiateUser(GetType().Name);
+        }
+        public static SessionEntity InstantiateSession(UserEntity user)
+        {
+            return new SessionEntity
+            {
+                UserEntity = user,
+            };
+        }
+
+        [Fact]
+        public async Task CreateSessionAsync()
+        {
+            await GetService<UserServiceImpl>().Handshake("user");
+            var response = await sessionService.CreateSessionAsync("user");
+            Assert.True(response.id == 2);
+            Assert.True(response.user_id == "user");
+        }
+        
+        [Fact]
+        public async Task GetSessionByIdAsync()
+        {
+            var user = await GetService<UserServiceImpl>().Handshake("user");
+            var createdSession = await sessionService.CreateSessionAsync("user");
+            var fetched = await sessionService.GetSessionByIdAsync(createdSession.id);
+            Assert.NotNull(fetched);
+            Assert.True(createdSession.id == fetched.id);
+
+        }
+            
+        [Fact]
+        public async Task GetSessionsByUserIdAsync()
+        { 
+            var user = await GetService<UserServiceImpl>().Handshake("user");
+            var createdSession = await sessionService.CreateSessionAsync("user");
+            var fetched = await sessionService.GetSessionsByUserIdAsync("user");
+            Assert.NotNull(fetched);
+            Assert.True(fetched.Count == 2);
+            Assert.True(1 == fetched[0].id);
+            Assert.True(createdSession.id == fetched[1].id);
+        }
+            
+        [Fact]
+        public async Task AddMessagesToSessionAsync()
+        {
+            var user = await GetService<UserServiceImpl>().Handshake("user");
+            var createdSession = await sessionService.CreateSessionAsync("user");
+            var messages = new List<ChatMessageDTO>();
+            for (int i = 0; i < 10; i++)
+            {
+                var msgEntity = new ChatMessageEntity
+                {
+                    user_id = user.sub,
+                    text = i.ToString(),
+                    timestamp = DateTime.UtcNow,
+                    session_id = createdSession.id
+                };
+                messages.Add(new ChatMessageDTO(msgEntity));
+            }
+            var returnedDTOs = await sessionService.AddMessagesToSessionAsync(createdSession.id, user.sub, messages);
+            var returnedSession = await sessionService.GetSessionByIdAsync(createdSession.id);
+            Assert.NotNull(returnedSession);
+            Assert.NotNull(returnedSession.title);
+            Assert.True(returnedSession.title.Length>5);
+            Assert.True(returnedDTOs.Count == 10);
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.True(returnedDTOs[i].text == i.ToString());
+            }
+        }
+
+        [Fact]
+        public async Task GenerateSessionTitle()
+        {
+            throw new NotImplementedException();
+        }
+        [Fact]
+        public async Task RemoveSessionAsync()
+        { 
+            var user = await GetService<UserServiceImpl>().Handshake("user");
+            var createdSession = await sessionService.CreateSessionAsync("user");
+            var getSession = () => sessionService.GetSessionByIdAsync(createdSession.id);
+            Assert.NotNull(await getSession());
+            await sessionService.RemoveSessionAsync(createdSession.id, user.sub);
+            Assert.Null(await getSession());
+
+        }
+            
+        }
+}

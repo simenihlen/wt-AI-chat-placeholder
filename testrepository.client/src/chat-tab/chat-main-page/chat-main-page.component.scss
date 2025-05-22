@@ -1,0 +1,406 @@
+.chat-container {
+  display: flex;
+  height: 100vh;
+  background-color: var(--wt-bg-prim);
+}
+
+/* Sidebar (Conversation History) */
+.chat-sidebar {
+  background-color: var(--wt-bg-sec);
+  padding: 1rem;
+  border-right: 1px solid var(--wt-border-input);
+  overflow-y: auto;
+  transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 95%;
+  max-width: 254px; /* muligens ta en annen approach til dette, men ideen er der*/
+  width: 100%;
+
+  &.collapsed {
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+}
+
+.add-project-btn {
+  width: 100%;
+  margin-top: auto;
+  padding: 10px;
+}
+
+.conversation-list {
+  margin-top: 1rem;
+}
+
+.conversation-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--wt-border-input);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.conversation-item.selected {
+  background-color: var(--wt-bg-highlight-prim);
+  color: white;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.select-btn {
+  background-color: var(--wt-bg-highlight-prim);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.select-btn:hover {
+  background-color: #0056b3;
+}
+
+.chat-input-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: #1E1E1E; /* Match dark UI */
+  padding: 10px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.conversation-item:hover {
+  background-color: var(--wt-bg-semi-prim);
+}
+
+.conversation-item.selected {
+  background-color: var(--wt-bg-highlight-prim);
+}
+
+.conversation-title {
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.conversation-preview {
+  font-size: 0.9rem;
+  color: var(--wt-tc-dim);
+}
+
+/* Main Chat View */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  max-height: 95vh;
+  position: relative;
+}
+
+// Display Dropped Stories
+.dropped-stories-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 100%;
+  padding: 5px;
+  align-items: end;
+  justify-content: flex-end;
+}
+.story-attachment {
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 14px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease-in-out;
+  min-height: 36px;
+}
+.story-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.story-title {
+  flex-grow: 1;
+  font-size: 14px;
+  color: #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80%;
+}
+.story-checkboxes {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+  font-size: 12px;
+}
+mat-checkbox {
+  font-size: 12px !important;
+}
+// End of display Dropped Stories
+
+// Message styles
+.chat-header {
+  border-bottom: 1px solid var(--wt-border-input);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 0.5rem;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 1rem;
+  padding-right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  word-wrap: break-word;
+}
+.message {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: var(--wt-bg-prim);
+  border-radius: 4px;
+}
+.message-sender {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+.message-content {
+  margin-bottom: 0.3rem;
+}
+.message-timestamp {
+  font-size: 0.8rem;
+  color: var(--wt-tc-dim);
+  text-align: right;
+}
+// End of message styles
+
+// Scroll to bottom button
+#scrollButton {
+  position: absolute;
+  display: none;
+  bottom: 4.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--wt-bg-highlight-prim);
+  margin: 0.5rem auto;
+}
+// End of scroll to bottom button
+
+// Add session button
+.add-session-btn {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.wt-header-2{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.quick-add-button{
+  background-color: var(--wt-bg-highlight-sec);
+}
+.quick-add-button:hover{
+  background-color: var(--wt-bg-highlight-prim);
+}
+// End of add session button
+
+// Message Prompt and Response Styles
+.message-prompt {
+  border: 2px solid var(--wt-border-input);
+  background-color: var(--wt-bg-hybrid-dark);
+  display: inline-block;
+  padding: 0.5rem;
+  text-align: left;
+  margin-left: auto;
+  align-items: flex-end;
+  max-width: 80%;
+}
+.message-prompt-header {
+  text-align: right;
+}
+.message-response {
+  margin-right: 10%;
+  align-items: flex-start;
+  text-align: left;
+  max-width: 80%;
+}
+// End of message styles
+
+// Markdown styles
+::ng-deep .message-text {
+  display: block;
+
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+  }
+  h1 { font-size: 1.8em; }
+  h2 { font-size: 1.5em; }
+  h3 { font-size: 1.3em; }
+  h4 { font-size: 1.1em; }
+
+  p {
+    margin: 0.5em 0;
+  }
+
+  ul, ol {
+    margin-left: 1.5em;
+  }
+
+  code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    background-color: var(--wt-bg-sec);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background-color: var(--wt-bg-sec);
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 0.5em 0;
+    border: 1px solid var(--wt-border-input, #444);
+    display: inline-block;
+
+    code {
+      padding: 0;
+      border-radius: 0;
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+
+    th, td {
+      border: 1px solid var(--wt-border-input, #444);
+      padding: 0.5em 0.75em;
+    }
+
+    th {
+      background-color: var(--wt-bg-semi-prim, #2a2a2a);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--wt-bg-hybrid-dark, #252525);
+    }
+  }
+}
+// End of markdown styles
+
+// Tab bar styles
+.tab-bar-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+// End of tab bar styles
+
+// Search btn styles 
+.search-btn {
+  margin-left: 6px
+}
+// end of search btn styles
+
+// Textarea and input styles
+.wt-textarea .input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px
+}
+.wt-input{
+  min-height: 2rem;
+  max-height: 2rem;
+}
+.wt-textarea .input-container textarea.wt-input {
+  flex: 1;
+  resize: vertical;
+  min-height: 40px;
+}
+.wt-textarea .send-button {
+  align-self: center;
+  white-space: nowrap;
+}
+.chat-input {
+  display: flex;
+  padding-top: 1rem;
+  border-top: 1px solid var(--wt-border-input);
+}
+.chat-input input {
+  flex: 1;
+  margin-right: 0.5rem;
+}
+.chat-input button {
+  min-width: 80px;
+}
+// End of textarea and input styles
+
+// Projects and project items
+.project-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--wt-border-input);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.project-item.selected {
+  background-color: var(--wt-bg-highlight-prim);
+  color: white;
+  border-radius: 5px;
+  padding: 5px;
+}
+mat-expansion-panel-header.selected {
+  background-color: var(--wt-bg-highlight-prim); // Use the same highlight color as your conversation-item
+}
+.hidden-until-hover {
+  display: none;
+}
+mat-expansion-panel-header:hover .hidden-until-hover {
+  display: inline-block;
+  background: transparent;
+}
+mat-expansion-panel-header.selected:hover,
+mat-expansion-panel-header.selected.mat-expanded {
+  background-color: var(--wt-bg-highlight-prim) !important;
+}
+// End of projects and project items
+
+// Sidebar button styles
+.sidebarMinBtn {
+  margin-right: 4px;
+}
+// End of sidebar button styles
+
+// Message for added stories
+.message-system {
+  color: var(--wt-tc-sec);
+  font-style: italic;
+  padding: 8px 16px;
+  margin: 4px 0;
+  text-align: center;
+}
+// End of message for added stories

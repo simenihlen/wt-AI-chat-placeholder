@@ -1,0 +1,254 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Testrepository.Server.Models.Entities;
+using Testrepository.Server.Persistence.Internal.GeneratedArtifacts;
+using Microsoft.EntityFrameworkCore;
+using TestProject.Server.Injection;
+
+using System.Reflection;
+using TestProject.Server.Baseclasses;
+using Testrepository.Server.Models.DTO;
+using Testrepository.Server.Services.SessionService.Implementations;
+using Testrepository.Server.Services.UserService.Implementations;
+using Testrepository.Server.Models.Requests;
+using Xunit.Abstractions;
+
+namespace TestProject.Server.Tests.ServiceTests
+{
+    public class OpenAIEmbeddingServiceTests : TestBase, IClassFixture<CustomWebApplicationFactory<Program>>
+    {
+        private readonly OpenAIEmbeddingServiceImpl openAIEmbeddingService;
+
+        public OpenAIEmbeddingServiceTests(CustomWebApplicationFactory<Program> factory, ITestOutputHelper logger) : base(factory, logger)
+        {
+            openAIEmbeddingService = GetService<OpenAIEmbeddingServiceImpl>();
+        }
+        [Fact]
+        public async Task GetEmbeddingAsync()
+        {
+            var teststrings = new List<string> { "Hello, world!", "How are you?" };
+            for (int i = 0; i < teststrings.Count; i++)
+            {
+                var response = await openAIEmbeddingService.GetEmbeddingAsync(teststrings[i]);
+                Assert.NotNull(response);
+                Assert.True(response.Length == 1536);
+            }
+        }
+
+        [Fact]
+        public async Task GetSimilarMessagesAsync()
+        {
+            var userService = GetService<UserServiceImpl>();
+            var sessionService = GetService<SessionServiceImpl>();
+
+            var user1 = await userService.Handshake("user1");
+            var session1 = await sessionService.CreateSessionAsync(user1.sub);
+            var user2 = await userService.Handshake("user2");
+            var session2 = await sessionService.CreateSessionAsync(user2.sub);
+            var fishmsgs = new List<string>
+{
+    "A world without fish is a world without wonder.",
+    "The ocean whispers stories, and fish are its storytellers.",
+//    "Some fish swim against the current, just like dreamers.",
+//    "A fish’s journey is endless, from river to sea and back again.",
+//    "Patience is a fisherman’s virtue and a fish’s survival skill.",
+//    "Beneath the waves, fish paint a dance of colors and light."
+};
+            var mathMsgs = new List<string>
+{
+    "Mathematics is the language with which God has written the universe.",
+//    "In the world of numbers, every problem has a solution waiting to be discovered.",
+//    "The beauty of math lies in its logic; a puzzle where each piece fits perfectly.",
+    "Geometry connects us to the infinite, where shapes stretch across eternity.",
+//  "Numbers don’t lie, but they have many ways to tell a story.",
+//    "Mathematics is not about numbers, equations, or computations, but about understanding."
+};
+            var historicalMsgs = new List<string>
+{
+    "History is not just about dates; it’s about the people who shaped the future.",
+//    "The wisdom of past leaders continues to echo in the decisions of today.",
+//    "Great minds like Einstein, Churchill, and Cleopatra defined their eras.",
+    "Leaders are remembered not by the battles they fought, but by the change they created.",
+//    "The mark of a true hero is the legacy left behind, not just in history, but in hearts.",
+//    "History is written by the victors, but the stories of the unsung are just as important."
+};
+            var user1msgs = new List<ChatMessageDTO>();
+            var user2msgs = new List<ChatMessageDTO>();
+            var chptservice = GetService<OpenAIChatServiceImpl>();
+            for (int i = 0; i < fishmsgs.Count; i++)
+            {
+                var user = i % 2 == 0 ? user1 : user2;
+                var session = i % 2 == 0 ? session1 : session2;
+                var userMsgList = i % 2 == 0 ? user1msgs : user2msgs;
+                var fishmsg = fishmsgs[i];
+                var mathmsg = mathMsgs[i];
+                var historicalmsg = historicalMsgs[i];
+                ChatRequest fishChatRequest = new ChatRequest
+                {
+                    SessionId = session.id,
+                    UserId = user.sub,
+                    Prompt = fishmsg
+                };
+                ChatRequest mathChatRequest = new ChatRequest
+                {
+                    SessionId = session.id,
+                    UserId = user.sub,
+                    Prompt = mathmsg
+                };
+                ChatRequest historicalChatRequest = new ChatRequest
+                {
+                    SessionId = session.id,
+                    UserId = user.sub,
+                    Prompt = historicalmsg
+                };
+                await chptservice.GetResponseAsync(fishChatRequest, new List<StoryDTO>());
+                await chptservice.GetResponseAsync(mathChatRequest, new List<StoryDTO>());
+                await chptservice.GetResponseAsync(historicalChatRequest, new List<StoryDTO>());
+            }
+
+            var fishQuestion = "What do fish symbolize?";
+            var fishQuestionEmbedding = await openAIEmbeddingService.GetEmbeddingAsync(fishQuestion);
+            var fishQuestionEmbeddingFloat = fishQuestionEmbedding.Select(x => (float)x).ToArray();
+            var mathQuestion = "What is the beauty of math?";
+            var mathEmbedding = await openAIEmbeddingService.GetEmbeddingAsync(mathQuestion);
+            var mathQuestionEmbeddingFloat = mathEmbedding.Select(x => (float)x).ToArray();
+            var historicalQuestion = "What is the importance of history?";
+            var historicalEmbedding = await openAIEmbeddingService.GetEmbeddingAsync(historicalQuestion);
+            var historicalQuestionEmbeddingFloat = historicalEmbedding.Select(x => (float)x).ToArray();
+
+            var fishResponseList = await openAIEmbeddingService.GetSimilarMessagesAsync(fishQuestionEmbeddingFloat, 5);
+            var mathResponseList = await openAIEmbeddingService.GetSimilarMessagesAsync(mathQuestionEmbeddingFloat, 5);
+            var historicalResponseList = await openAIEmbeddingService.GetSimilarMessagesAsync(historicalQuestionEmbeddingFloat, 5);
+
+            Assert.True(fishResponseList.Count == 5);
+            Assert.True(mathResponseList.Count == 5);
+            Assert.True(historicalResponseList.Count == 5);
+            //Assert.Fail("No test of message similarity");
+        }
+        [Fact]
+        public async Task GenerateSessionSummaryAsync()
+        {
+            var user = await GetService<UserServiceImpl>().Handshake("user1");
+            List<string> subjects = new List<string>
+            {
+                "Healthy eating habits",
+                "Space exploration",
+                "Importance of sleep",
+                "Basics of climate change",
+                /*"History of the internet",
+                "Benefits of exercise",
+                "How airplanes fly",
+                "Introduction to AI",
+                "Famous historical figures",
+                "Ocean conservation"*/
+            };
+            var sessions = new List<SessionEntity>();
+            foreach (var s in subjects)
+            {
+                var session = await GetService<SessionServiceImpl>().CreateSessionAsync(user.sub);
+                sessions.Add(session);
+                ChatRequest request = new ChatRequest
+                {
+                    SessionId = session.id,
+                    UserId = user.sub,
+                    Prompt = s
+                };
+                await GetService<OpenAIChatServiceImpl>().GetResponseAsync(request, new List<StoryDTO>());
+                await openAIEmbeddingService.GenerateSessionSummaryAsync(session.id);
+            }
+            foreach (var s in sessions)
+            {
+                var summary = await GetService<DatabaseContext>().SessionsSummaries.FirstOrDefaultAsync(ss => ss.session_id == s.id);
+                Assert.NotNull(summary);
+                Assert.True(summary.summary_text.Length > 5);
+            }
+        }
+        
+        [Fact]
+        public async Task GetSummaryFromOpenAI()
+        {
+            throw new NotImplementedException("method is private");
+        }
+        
+        [Fact]
+        public async Task GetSimilarSessionSummariesAsync()
+        {
+            List<string> subjects = new List<string>
+            {
+                "Healthy eating habits",
+                "Space exploration",
+                "Importance of sleep",
+                "Basics of climate change"
+            };
+            var prompts = new List<string>
+            {
+                "What are the benefits of healthy eating?",
+                "What are the benefits of space exploration?",
+                "What are the benefits of sleep?",
+                "What are the benefits of understanding climate change?"
+            };
+            var user = await GetService<UserServiceImpl>().Handshake("user1");
+            var sessions = new List<SessionEntity>();
+            foreach (var s in subjects)
+            {
+                var session = await GetService<SessionServiceImpl>().CreateSessionAsync(user.sub);
+                sessions.Add(session);
+                ChatRequest request = new ChatRequest
+                {
+                    SessionId = session.id,
+                    UserId = user.sub,
+                    Prompt = s
+                };
+                await GetService<OpenAIChatServiceImpl>().GetResponseAsync(request, new List<StoryDTO>());
+                await openAIEmbeddingService.GenerateSessionSummaryAsync(session.id);
+            }
+            for (int i = 0; i<prompts.Count;i++)
+            {
+                var embedding = await openAIEmbeddingService.GetEmbeddingAsync(prompts[i]);
+                var summaries = await openAIEmbeddingService.GetSimilarSessionSummariesAsync(user.sub, embedding);
+                Assert.NotNull(summaries);
+                Assert.True(summaries[0].session_id == sessions[i].id);
+            }
+        }
+
+        [Fact]
+        public async Task GenerateOrUpdateSessionSummaryAsync()
+        {
+            List<string> subjects = new List<string>
+            {
+                "Healthy eating habits",
+                "Space exploration",
+            };
+            var prompts = new List<string>
+            {
+                "What are the benefits of healthy eating?",
+                "What are the benefits of space exploration?",
+            };
+            var user = await GetService<UserServiceImpl>().Handshake("user1");
+            var sessions = new List<SessionEntity>();
+            foreach (var s in subjects)
+            {
+                var session = await GetService<SessionServiceImpl>().CreateSessionAsync(user.sub);
+                sessions.Add(session);
+                ChatRequest request = new ChatRequest
+                {
+                    SessionId = session.id,
+                    UserId = user.sub,
+                    Prompt = s
+                };
+                await GetService<OpenAIChatServiceImpl>().GetResponseAsync(request, new List<StoryDTO>());
+                await openAIEmbeddingService.GenerateOrUpdateSessionSummaryAsync(session.id);
+            }
+            for (int i = 0; i < prompts.Count; i++)
+            {
+                var embedding = await openAIEmbeddingService.GetEmbeddingAsync(prompts[i]);
+                var summaries = await openAIEmbeddingService.GetSimilarSessionSummariesAsync(user.sub, embedding);
+                Assert.NotNull(summaries);
+                Assert.True(summaries[0].session_id == sessions[i].id);
+            }
+        }
+    }
+}

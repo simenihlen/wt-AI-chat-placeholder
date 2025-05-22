@@ -1,0 +1,114 @@
+﻿@startuml
+
+' Define Controllers at the top
+class Program
+class ChatGPTController
+class SessionController {
+    +CreateSession()
+    +GetSessionById()
+    +GetAllSessions()
+}
+class UserController
+
+' Define DAO (Database Access Layer)
+class DatabaseContext {
+    +ChatMessages
+    +Sessions
+}
+
+
+' Define Interface
+interface IChatService
+
+' Define Models - DTOs (Data Transfer Objects)
+class ChatMessageDTO
+class HandshakeDTO
+class SessionDTO
+class StoryDTO
+class UserDTO
+
+' Define Models - Entities (Database Models)
+class ChatMessageEmbeddingEntity
+class ChatMessageEntity
+class SessionEntity
+class SessionSummaryEntity
+class Story
+class UserEntity
+
+' Define Services (Business Logic Layer)
+class ChatGPTService {
+    +GetResponseAsync()
+}
+class OpenAIEmbeddingService {
+    +GenerateSessionSummaryAsync()
+    +GenerateOrUpdateSessionSummaryAsync()
+}
+class SessionService {
+    +CreateSessionAsync()
+    +RemoveSessionAsync()
+}
+class StoryService {
+    +SummarizeStoryText()
+    +StoreStorySummaryEmbedding()
+}
+class UserService {
+    +Handshake()
+}
+
+' Define Database at the bottom
+class Database {
+    +PostgreSQL 
+}
+
+' Interface Implementation (Service Dependencies)
+IChatService <|.. ChatGPTService
+
+
+' Relationships between Controllers and Services
+Program --> ChatGPTController
+Program --> SessionController
+Program --> UserController
+
+ChatGPTController --> ChatGPTService
+SessionController --> SessionService
+UserController --> UserService
+
+' Relationships between Services and DAO
+SessionService --> DatabaseContext
+StoryService --> DatabaseContext
+UserService --> DatabaseContext
+OpenAIEmbeddingService --> ChatGPTService
+OpenAIEmbeddingService --> StoryService
+
+DatabaseContext --> Database
+
+' DTOs to Services Mapping
+ChatMessageDTO --> ChatGPTService
+SessionDTO --> SessionService
+StoryDTO --> StoryService
+UserDTO --> UserService
+
+' Entities to Services Mapping
+ChatGPTService --> ChatMessageEntity
+SessionService --> SessionEntity
+StoryService --> Story
+UserService --> UserEntity
+OpenAIEmbeddingService --> ChatMessageEmbeddingEntity
+OpenAIEmbeddingService --> SessionSummaryEntity
+ChatGPTService --> SessionSummaryEntity
+
+' DTO to Entity Conversion
+ChatMessageDTO --> ChatMessageEntity
+SessionDTO --> SessionEntity
+StoryDTO --> Story
+UserDTO --> UserEntity
+
+' Handshake Process
+HandshakeDTO --> UserController
+HandshakeDTO --> UserService
+HandshakeDTO --> UserEntity
+
+' Chat Request Flow
+ChatRequest --> ChatGPTController
+
+@enduml

@@ -1,0 +1,74 @@
+.chat-container {
+  display: flex;
+  height: 100vh;
+  background-color: #1e1e1e;
+  color: white;
+}
+
+.chat-sidebar {
+  width: 30%;
+  padding: 10px;
+  border-right: 1px solid #444;
+}
+
+.chat-sidebar h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-session-btn {
+  background-color: #28a745;
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.conversation-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.conversation-item.selected {
+  background-color: #444;
+}
+
+.chat-main {
+  flex: 1;
+  padding: 10px;
+}
+
+.chat-messages {
+  height: 80%;
+  overflow-y: auto;
+}
+
+.message {
+  margin: 10px 0;
+}
+
+.message-timestamp {
+  font-size: 12px;
+  color: #aaa;
+  margin-left: 10px;
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+}
+
+.no-conversation-selected {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  color: #ccc;
+}

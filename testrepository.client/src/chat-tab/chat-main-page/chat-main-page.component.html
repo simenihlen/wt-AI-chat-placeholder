@@ -1,0 +1,123 @@
+<div class="chat-container">
+  <!-- Sidebar: Conversation History -->
+  <div class="chat-sidebar" [class.collapsed]="isSidebarCollapsed">
+    <h2 class="wt-header-2" [attr.aria-label]="'Conversations'" >
+      {{ 'Conversations' | translate }}
+      <span class="quick-add-buttons">
+        <button class="add-session-btn search-btn" (click)="toggleSearchBarVisibility()"><span class="quick-add-button rounded-square icon-search"></span></button>
+        <button class="add-session-btn add-btn" (click)="startNewChat()"><span class="quick-add-button rounded-square icon-plus"></span></button>
+      </span>
+    </h2>
+    <input class="wt-input" id="search-bar" [hidden]="!isSearchBarVisible" placeholder="Search..." (keyup)="searchConversations($event)">
+    <div class="tab-bar-container">
+      <tab-bar [tabs]="filterTabs" [initialTab]="'1'" (tabChanged)="setActiveTab($event)"></tab-bar>
+    </div>
+    <div class="conversation-list" *ngIf="selectedTab === '1'">
+      <div *ngFor="let convo of defaultProjectSessions"
+           (click)="selectConversation(convo)"
+           [class.selected]="selectedConversation?.id === convo.id"
+           class="conversation-item">
+        <div class="conversation-title">{{ convo.title || 'New Session' }}</div>
+      </div>
+    </div>
+      <div class="project-list" *ngIf="selectedTab === '2'">
+          <div *ngFor="let project of projectList" class="project-item">
+              <mat-expansion-panel class="wt-expansion-panel-light" [togglePosition]="'before'" [expanded]="selectedProject?.id === project.id">
+                  <mat-expansion-panel-header
+                          (click)="selectProject(project)"
+                          [ngClass]="{'selected': selectedProject?.id === project.id}">
+                      <span>{{ project.title }}</span>
+                    <button class="wt-button-icon-small tw-discreet hidden-until-hover" [attr.aria-label]="'Icon button' | translate" (click)="openDeleteProjectDialog(selectedProject)"><span class="icon-trash st"></span></button>
+                  </mat-expansion-panel-header>
+                  <div *ngIf="project.sessions && project.sessions.length > 0; else noSessions">
+                      <div *ngFor="let convo of project.sessions"
+                           (click)="selectConversation(convo)"
+                           [class.selected]="selectedConversation?.id === convo.id"
+                           class="conversation-item">
+                          <div class="conversation-title">{{ convo.title }}</div>
+                      </div>
+                  </div>
+                  <ng-template #noSessions>
+                      <div class="no-sessions" [attr.aria-label]="'No sessions in this project'">
+                    {{ 'No sessions in this project' | translate }}</div>
+                  </ng-template>
+              </mat-expansion-panel>
+          </div>
+      </div>
+    <!-- New Project button -->
+    <button class="wt-button-small tw-border add-project-btn" (click)="openAddProjectDialog()"><span class="icon-hunter_outline st" [attr.aria-label]="'New Project'"></span>{{ 'New Project' | translate }}</button>
+  </div>
+
+   <!-- Main Chat View -->
+   <div class="chat-main">
+     <div class="chat-header">
+      <button class="wt-button-icon tw-discreet sidebarMinBtn" (click)="toggleSidebar()" >
+        <span *ngIf="!isSidebarCollapsed" class="icon-step_left st"></span>
+        <span *ngIf="isSidebarCollapsed" class="icon-step_right st"></span>
+      </button>
+       <h2 class="wt-header-2">{{ selectedConversation?.title }}</h2>
+       <button class="wt-button-icon" [attr.aria-label]="'Icon button' | translate"><span class="icon-trash st" (click)="openDeleteConversationDialog()"></span></button>
+     </div>
+     <div class="chat-messages" #chatContainer
+          [appJDrop] = "handleDrop.bind(this)">
+       <div *ngFor="let msg of selectedConversation?.messages" class="message"
+          [ngClass]="{
+            'message-prompt': msg.sender !== 'bot' && msg.sender !== 'system',
+            'message-response': msg.sender === 'bot',
+            'message-system': msg.sender === 'system'
+            }">
+         <div class="wt-header-3 message-sender"
+            [ngClass]="{
+              'message-prompt-header': msg.sender!== 'bot' && msg.sender !== 'system',
+              'icon-hunter_outline': msg.sender === 'bot'
+              }">
+          </div>
+         <div class="wt-text message-text" [innerHTML]="msg.text | markdown"></div>
+         <div class="wt-text-small message-timestamp">{{ msg.timestamp | date:'shortTime' }}</div>
+       </div>
+       <div *ngIf="isLoading" class="loader-container">
+        <div class="ui-ref-loader-container">
+          <div class="wt-loader-container">
+            <div class="wtLoader"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button *ngIf="showScrollButton" id="scrollButton" class="wt-button-small tw-border tw-rounded" (click)="scrollToBottom()" style="display: none;"
+            [attr.aria-label]="'⬇ Scroll to Bottom'">
+       ⬇ {{ 'Scroll to Bottom' | translate }}
+    </button>
+
+     <!-- Display Dropped Stories -->
+     <div class="dropped-stories-container">
+       <div *ngFor="let story of droppedStories" class="story-attachment">
+         <!-- Story content in a single line -->
+         <div class="story-content">
+           <span class="story-title" [title]="story.title">📄 {{ story.title }}</span>
+           <button class="remove-btn" (click)="removeStory(story)">×</button>
+         </div>
+
+         <!-- Checkboxes aligned properly -->
+         <div class="story-checkboxes">
+           <mat-checkbox [(ngModel)]="story.includeDescription" (change) = "updateStory(story)"> Include Description </mat-checkbox>
+          <mat-checkbox [(ngModel)]="story.includeBackground" (change) = "updateStory(story)"> Include Background Info </mat-checkbox>
+         </div>
+       </div>
+     </div>
+
+      <!-- Chat Input and Buttons -->
+     <div class="wt-textarea">
+        <div class="input-container">
+          <button class="wt-button-icon" [attr.aria-label]="'Icon button' | translate" (click)="openStoryList()"><span class="icon-menu st"></span></button>
+          <textarea cdkTextareaAutosize [(ngModel)]="newMessage"
+                 placeholder="Type a message..."
+                 class="wt-input"
+                    (keyup.enter)="sendMessage()">
+          </textarea>
+
+          <button class="wt-button" [disabled]="!newMessage.trim() && selectedConversations.length === 0"
+                  (click)="sendMessage()" [attr.aria-label]="'Send'" >{{ 'Send' | translate }}</button>
+        </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<div class="dialog-container">
+    <h2 mat-dialog-title class="wt-header-2" id="title">Project Stories</h2>
+
+    <div mat-dialog-content>
+      <div *ngIf="data.stories && data.stories.length > 0; else noStories">
+        <div class="story-list">
+          <div *ngFor="let story of data.stories" class="story-item" (click)="selectStory(story)">
+            <div class="story-title">{{ story.title }}</div>
+            <div class="story-info">{{ story.uniqueId }}</div>
+          </div>
+        </div>
+      </div>
+      <ng-template #noStories>
+        <p>No stories found in this project.</p>
+      </ng-template>
+    </div>
+
+    <div mat-dialog-actions align="end">
+      <button class="wt-button" (click)="closeDialog()">Close</button>
+    </div>
+  </div>
